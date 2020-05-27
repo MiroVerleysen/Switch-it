@@ -50,18 +50,8 @@ def ophalen_actuator_data(actuatorID):
 
 def lees_knop(pin):
     print("button pressed")
-    now = datetime.now()
-    formatted_date = now.strftime('%Y-%m-%d %H:%M:%S')
-    if GPIO.input(led1) == 1:
-        GPIO.output(led1, GPIO.LOW)
-        GPIO.output(groen, GPIO.LOW)
-        GPIO.output(rood, GPIO.HIGH)
-        DataRepository.update_waarde_actuator(1,formatted_date ,0)
-    else:
-        GPIO.output(led1, GPIO.HIGH)
-        GPIO.output(groen, GPIO.HIGH)
-        GPIO.output(rood, GPIO.LOW)
-        DataRepository.update_waarde_actuator(1,formatted_date ,1)
+    toggle_relais()
+    
 
 def startIR():
     print("Zoektocht naar IR signalen starten")
@@ -74,8 +64,23 @@ def startIR():
             DataRepository.update_waarde_sensor(1,code)
             if (str(hex(code)) == "0xffa25d"):
                 print("aan")
+                toggle_relais()
         else:
             print("Foute code")
+
+def toggle_relais():
+    now = datetime.now()
+    formatted_date = now.strftime('%Y-%m-%d %H:%M:%S')
+    if GPIO.input(led1) == 1:
+        GPIO.output(led1, GPIO.LOW)
+        GPIO.output(groen, GPIO.LOW)
+        GPIO.output(rood, GPIO.HIGH)
+        DataRepository.update_waarde_actuator(1,formatted_date ,0)
+    else:
+        GPIO.output(led1, GPIO.HIGH)
+        GPIO.output(groen, GPIO.HIGH)
+        GPIO.output(rood, GPIO.LOW)
+        DataRepository.update_waarde_actuator(1,formatted_date ,1)
 
 
 def socket():
