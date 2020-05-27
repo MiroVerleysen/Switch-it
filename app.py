@@ -39,8 +39,18 @@ def hallo():
     return "Server is running, er zijn momenteel geen API endpoints beschikbaar."
 
 @app.route('/read_all')
-def ophalen_sensor_data():
+def ophalen_sensoren_data():
     output = DataRepository.read_all_sensors()
+    return jsonify(data = output), 200
+
+@app.route('/read_sensor/<sensorID>')
+def ophalen_sensor_data(sensorID):
+    output = DataRepository.read_sensor_by_id_one(sensorID)
+    return jsonify(data = output), 200
+
+@app.route('/read_sensor_recent/<sensorID>')
+def ophalen_sensor_recent_data(sensorID):
+    output = DataRepository.read_sensor_by_id_recent(sensorID)
     return jsonify(data = output), 200
 
 @app.route('/read_actuator/<actuatorID>')
@@ -62,6 +72,8 @@ def startIR():
         if code:
             print(str(code))
             DataRepository.update_waarde_sensor(1,code)
+            DataRepository.read_sensor_by_id_one(1)
+            DataRepository.read_sensor_by_id_recent(1)
             if (str(hex(code)) == "0xffa25d"):
                 print("Toggle")
                 toggle_relais()
