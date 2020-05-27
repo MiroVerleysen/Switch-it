@@ -1,7 +1,7 @@
 from RPi import GPIO
 
 class Button:
-    def __init__(self, pin, bouncetime=500):
+    def __init__(self, pin, bouncetime=400):
         self.pin = pin
         self.bouncetime = bouncetime
 
