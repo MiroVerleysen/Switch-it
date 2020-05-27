@@ -63,7 +63,7 @@ def startIR():
             print(str(code))
             DataRepository.update_waarde_sensor(1,code)
             if (str(hex(code)) == "0xffa25d"):
-                print("aan")
+                print("Toggle")
                 toggle_relais()
         else:
             print("Foute code")
