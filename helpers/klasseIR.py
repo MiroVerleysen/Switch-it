@@ -2,7 +2,7 @@ from RPi import GPIO
 from time import time
 
 class InfraRood:
-    def __init__(self, pin, bouncetime=250):
+    def __init__(self, pin, bouncetime=100):
         self.pin = pin
         self.bouncetime = bouncetime
         GPIO.setmode(GPIO.BCM)
@@ -47,26 +47,3 @@ class InfraRood:
         except ValueError:
             # probably an empty code
             return None
-
-
-    if __name__ == "__main__":
-        try:
-            print("Starting IR Listener")
-            while True:
-                print("Waiting for signal")
-                GPIO.wait_for_edge(18, GPIO.FALLING)
-                code = on_ir_receive(18)
-                if code:
-                    print(str(hex(code)))
-                    if (str(hex(code)) == "0xffa25d"):
-                        print("aan")
-                else:
-                    print("Invalid code")
-        except KeyboardInterrupt:
-            pass
-        except RuntimeError:
-            # this gets thrown when control C gets pressed
-            # because wait_for_edge doesn't properly pass this on
-            pass
-        print("Quitting")
-        GPIO.cleanup()
