@@ -9,6 +9,7 @@ from datetime import datetime
 import time
 from subprocess import check_output
 import threading
+import serial
 
 # Code voor led
 from helpers.klasseknop import Button
@@ -62,31 +63,30 @@ app.config['SECRET_KEY'] = 'Hier mag je om het even wat schrijven, zolang het ma
 socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app)
 
-
 # API ENDPOINTS
 @app.route('/')
 def hallo():
-    return "Server is running, er zijn momenteel geen API endpoints beschikbaar."
+  return "Server is running, er zijn momenteel geen API endpoints beschikbaar."
 
 @app.route('/read_all')
 def ophalen_sensoren_data():
-    output = DataRepository.read_all_sensors()
-    return jsonify(data = output), 200
+  output = DataRepository.read_all_sensors()
+  return jsonify(data = output), 200
 
 @app.route('/read_sensor/<sensorID>')
 def ophalen_sensor_data(sensorID):
-    output = DataRepository.read_sensor_by_id_one(sensorID)
-    return jsonify(data = output), 200
+  output = DataRepository.read_sensor_by_id_one(sensorID)
+  return jsonify(data = output), 200
 
 @app.route('/read_sensor_recent/<sensorID>')
 def ophalen_sensor_recent_data(sensorID):
-    output = DataRepository.read_sensor_by_id_recent(sensorID)
-    return jsonify(data = output), 200
+  output = DataRepository.read_sensor_by_id_recent(sensorID)
+  return jsonify(data = output), 200
 
 @app.route('/read_actuator/<actuatorID>')
 def ophalen_actuator_data(actuatorID):
-    output = DataRepository.read_status_actuator_by_id(actuatorID)
-    return jsonify(data = output), 200
+  output = DataRepository.read_status_actuator_by_id(actuatorID)
+  return jsonify(data = output), 200
 
 def lcd_init():
   # Initialise display
@@ -150,7 +150,6 @@ def lcd_toggle_enable():
  
 def lcd_string(message,line):
   # Send string to display
- 
   message = message.ljust(LCD_WIDTH," ")
  
   lcd_byte(line, LCD_CMD)
@@ -168,24 +167,24 @@ def printLCD():
 
 
 def lees_knop(pin):
-    global count
-    print("button pressed")
-    kaas = DataRepository.read_status_actuator_by_id(1)
-    if (count == 0):
-      print(count)
-      count += 1
-      time.sleep(0.05)
-      lcd_string(f"status: {lcdéén()}",LCD_LINE_2)
-    elif (count == 1):
-      print(count)
-      count += 1
-      time.sleep(0.05)
-      lcd_string(f"2",LCD_LINE_2)
-    elif (count == 2):
-      print(count)
-      count = 0
-      time.sleep(0.05)
-      lcd_string(f"3",LCD_LINE_2)
+  global count
+  print("button pressed")
+  kaas = DataRepository.read_status_actuator_by_id(1)
+  if (count == 0):
+    print(count)
+    count += 1
+    time.sleep(0.05)
+    lcd_string(f"status: {lcdéén()}",LCD_LINE_2)
+  elif (count == 1):
+    print(count)
+    count += 1
+    time.sleep(0.05)
+    lcd_string(f"2",LCD_LINE_2)
+  elif (count == 2):
+    print(count)
+    count = 0
+    time.sleep(0.05)
+    lcd_string(f"3",LCD_LINE_2)
 
 def lcdéén():
   if GPIO.input(relais) == 1:
@@ -195,46 +194,68 @@ def lcdéén():
 
 
 def startIR():
-    print("Zoektocht naar IR signalen starten")
-    while True:
-        print("Wachtend op een signaal")
-        GPIO.wait_for_edge(18, GPIO.FALLING)
-        code = ir.on_ir_receive(18)
-        if code:
-            print(str((code)))
-            DataRepository.update_waarde_sensor(1,code)
-            DataRepository.read_sensor_by_id_one(1)
-            DataRepository.read_sensor_by_id_recent(1)
-            if (code == 16753245):
-                code = 1
-                time.sleep(0.75)
-                toggle_relais()
-                print("code ok")
-        else:
-            print("Foute code")
+  print("Zoektocht naar IR signalen starten")
+  while True:
+    print("Wachtend op een signaal")
+    GPIO.wait_for_edge(18, GPIO.FALLING)
+    code = ir.on_ir_receive(18)
+    if code:
+      print(str((code)))
+      DataRepository.update_waarde_sensor(1,code)
+      DataRepository.read_sensor_by_id_one(1)
+      DataRepository.read_sensor_by_id_recent(1)
+      if (code == 16753245):
+        code = 1
+        time.sleep(0.75)
+        toggle_relais()
+        print("code ok")
+      else:
+        print("Foute code")
 
 def toggle_relais():
-    global count
-    now = datetime.now()
-    formatted_date = now.strftime('%Y-%m-%d %H:%M:%S')
-    count = 0
-    if GPIO.input(relais) == 1:
-        GPIO.output(relais, GPIO.LOW)
-        GPIO.output(groen, GPIO.LOW)
-        GPIO.output(rood, GPIO.HIGH)
-        DataRepository.update_waarde_actuator(1,formatted_date ,0)
-        print("Toggle")
-        lcd_string(f"status: {lcdéén()}",LCD_LINE_2)
-    else:
-        GPIO.output(relais, GPIO.HIGH)
-        GPIO.output(groen, GPIO.HIGH)
-        GPIO.output(rood, GPIO.LOW)
-        DataRepository.update_waarde_actuator(1,formatted_date ,1)
-        print("Toggle")
-        lcd_string(f"status: {lcdéén()}",LCD_LINE_2)
+  global count
+  now = datetime.now()
+  formatted_date = now.strftime('%Y-%m-%d %H:%M:%S')
+  count = 0
+  if GPIO.input(relais) == 1:
+    GPIO.output(relais, GPIO.LOW)
+    GPIO.output(groen, GPIO.LOW)
+    GPIO.output(rood, GPIO.HIGH)
+    DataRepository.update_waarde_actuator(1,formatted_date ,0)
+    print("Toggle")
+    lcd_string(f"status: {lcdéén()}",LCD_LINE_2)
+  else:
+    GPIO.output(relais, GPIO.HIGH)
+    GPIO.output(groen, GPIO.HIGH)
+    GPIO.output(rood, GPIO.LOW)
+    DataRepository.update_waarde_actuator(1,formatted_date ,1)
+    print("Toggle")
+    lcd_string(f"status: {lcdéén()}",LCD_LINE_2)
 
 def socket():
-    socketio.run(app, debug=False, host='0.0.0.0')
+  socketio.run(app, debug=False, host='0.0.0.0')
+
+def arduinocom():
+  ser = serial.Serial('/dev/ttyS0',9600)
+  rfid = ""
+  stroom = -1
+  while True:
+    read_serial=str(ser.readline())[2:-5]
+    print(read_serial)
+    
+    if (str(read_serial)[0].isdigit()):
+      print("stroom")
+      DataRepository.update_waarde_sensor(2,read_serial)
+      DataRepository.read_sensor_by_id_one(2)
+      DataRepository.read_sensor_by_id_recent(2)
+    elif (str(read_serial)[0].isalpha()):
+      print("RFID")
+      if (str(read_serial)[0] == "B"):
+        DataRepository.update_waarde_sensor(3, 1)
+      if (str(read_serial)[0] == "F"):
+        DataRepository.update_waarde_sensor(3, 2)
+      DataRepository.read_sensor_by_id_one(3)
+      DataRepository.read_sensor_by_id_recent(3)
 
 knop1.on_press(lees_knop)
 
@@ -244,9 +265,11 @@ lcd_init()
 
 proces = threading.Thread(target=printLCD)
 proces2 = threading.Thread(target=socket)
+proces3 = threading.Thread(target=arduinocom)
 
 if __name__ == '__main__':
   try:
+    proces3.start()
     proces2.start()
     proces.start()
     startIR()
