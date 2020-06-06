@@ -25,6 +25,8 @@ LCD_D7 = 13
 
 count = 0
 status = ""
+
+huidigestroom = "0.000000"
 # LCD constantes definieren
 LCD_WIDTH = 16    # Maximum characters per lijn
 LCD_CHR = True
@@ -78,14 +80,19 @@ def ophalen_sensor_data(sensorID):
   output = DataRepository.read_sensor_by_id_one(sensorID)
   return jsonify(data = output), 200
 
-@app.route('/read_sensor_recent/<sensorID>')
-def ophalen_sensor_recent_data(sensorID):
-  output = DataRepository.read_sensor_by_id_recent(sensorID)
+@app.route('/read_sensor_recent/<sensorID>.<tijd>')
+def ophalen_sensor_recent_data(sensorID, tijd):
+  output = DataRepository.read_sensor_by_id_recent(sensorID, tijd)
   return jsonify(data = output), 200
 
 @app.route('/read_actuator/<actuatorID>')
 def ophalen_actuator_data(actuatorID):
   output = DataRepository.read_status_actuator_by_id(actuatorID)
+  return jsonify(data = output), 200
+
+@app.route('/read_actuator_historie/<aantal>')
+def ophalen_actuator_historie(aantal):
+  output = DataRepository.read_schakelhistorie(aantal)
   return jsonify(data = output), 200
 
 def lcd_init():
@@ -202,8 +209,6 @@ def startIR():
     if code:
       print(str((code)))
       DataRepository.update_waarde_sensor(1,code)
-      DataRepository.read_sensor_by_id_one(1)
-      DataRepository.read_sensor_by_id_recent(1)
       if (code == 16753245):
         code = 1
         time.sleep(0.75)
@@ -237,25 +242,28 @@ def socket():
 
 def arduinocom():
   ser = serial.Serial('/dev/ttyS0',9600)
+  ser.flushInput()
+  time.sleep(0.1)
   rfid = ""
   stroom = -1
   while True:
     read_serial=str(ser.readline())[2:-5]
     print(read_serial)
-    
     if (str(read_serial)[0].isdigit()):
       print("stroom")
-      DataRepository.update_waarde_sensor(2,read_serial)
-      DataRepository.read_sensor_by_id_one(2)
-      DataRepository.read_sensor_by_id_recent(2)
+      global huidigestroom
+      if str(read_serial) == "0.017256" or str(read_serial) == "0.034517":
+        read_serial = "0.000000"
+      while (huidigestroom != str(read_serial)):
+        huidigestroom = read_serial
+        DataRepository.update_waarde_sensor(2,read_serial)
     elif (str(read_serial)[0].isalpha()):
       print("RFID")
+      toggle_relais();
       if (str(read_serial)[0] == "B"):
         DataRepository.update_waarde_sensor(3, 1)
       if (str(read_serial)[0] == "F"):
         DataRepository.update_waarde_sensor(3, 2)
-      DataRepository.read_sensor_by_id_one(3)
-      DataRepository.read_sensor_by_id_recent(3)
 
 knop1.on_press(lees_knop)
 

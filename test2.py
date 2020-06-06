@@ -1,5 +1,7 @@
 import serial
+
 ser = serial.Serial('/dev/ttyS0',9600)
+ser.flushInput()
+
 while True:
-	read_serial=ser.readline()
-	print(read_serial)
+    print("{0}".format(ser.readline()))
